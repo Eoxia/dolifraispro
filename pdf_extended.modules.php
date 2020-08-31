@@ -1139,14 +1139,52 @@ class pdf_extended extends ModeleExpenseReport
 			
 			$proofFilename = $file['name'];
 			$pdfname = $file['level1name'] . '.pdf';
+			$filename = $file['fullname'];
+			list($width, $height, $type) = getimagesize($filename);
+			$ratio = $width/$height;
+			$portrait = $height > $width ? true : false;
+			
+			if ($ratio > 1)
+			{
+				if ($portrait)
+				{
+					$pageWidth = $this->page_largeur-($this->marge_gauche + $this->marge_droite);
+				}
+				else
+				{
+					$pageWidth = $this->page_hauteur-($this->marge_haute + $this->marge_basse);
+				}
+				
+				$pageHeight = $pageWidth / $ratio; 
+			}
+			else
+			{
+				if ($portrait)
+				{
+					$pageHeight = $this->page_hauteur-($this->marge_haute + $this->marge_basse);
+				}
+				else
+				{
+					$pageHeight = $this->page_largeur-($this->marge_gauche + $this->marge_droite);
+				}									
+				
+				$pageWidth = $pageHeight * $ratio; 
+			}	
 
 			if (preg_match('/\.(jpg|png|jpeg)$/', $file['name'])) {
-				$pdf->addPage();
-				$pdf->Image($file['fullname'], $pdf->GetX(), $pdf->GetY(),100 );
-			} 
+				
+				$pdf->AddPage($portrait ? 'P' : 'L');
+				$pagenb++;									
+				
+				// Paste image in PDF
+				$pdf->SetXY($this->marge_gauche-5, $this->marge_haute-5);
+				$pdf->Cell(100,0,$proofFilename,1,1,'C',$pdf->Image($filename,$this->marge_gauche, $this->marge_haute));
+
+				
+			}
 		
 			else if (preg_match('/\.(pdf)$/', $file['name']) && $pdfname !== $file['name'] ) {
-				$pagesNbr = $pdf->setSourceFile($file['fullname']);
+				$pagesNbr = $pdf->setSourceFile($filename);
 				for ($p = 1; $p <= $pagesNbr; $p++)	{
 
 					$templateIdx = $pdf->ImportPage($p);
@@ -1155,8 +1193,9 @@ class pdf_extended extends ModeleExpenseReport
 					
 					$pdf->AddPage($portrait ? 'P' : 'L');
 					$pagenb++; 
+					$pdf->SetXY($this->marge_gauche-5, $this->marge_haute-5);
+					$pdf->Cell(100,0,$proofFilename,1,1,'C',$pdf->useTemplate($templateIdx));
 					
-					$pdf->useTemplate($templateIdx);
 				}				
 			}
 		endforeach;	
