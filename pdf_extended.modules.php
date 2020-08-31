@@ -7,6 +7,7 @@
  * Copyright (C) 2019       Markus Welters          <markus@welters.de>
  * Copyright (C) 2019       Rafael Ingenleuf        <ingenleuf@welters.de>
  * Copyright (C) 2020       Marc Guenneugues        <marc.guenneugues@simicar.fr>
+ * Copyright (C) 2020       Théo David        		<theo.david@evarisk.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -449,7 +450,7 @@ class pdf_extended extends ModeleExpenseReport
 
                     //$nexY+=$nblineFollowComment*($pdf->getFontSize()*1.3);    // Add space between lines
                     $nexY += ($pdf->getFontSize() * 1.3); // Add space between lines
-
+					
 					// Detect if some page were added automatically and output _tableau for past pages
 					while ($pagenb < $pageposafter)
 					{
@@ -485,6 +486,7 @@ class pdf_extended extends ModeleExpenseReport
 						if (!empty($tplidx)) $pdf->useTemplate($tplidx);
 						$pagenb++;
 						if (empty($conf->global->MAIN_PDF_DONOTREPEAT_HEAD)) $this->_pagehead($pdf, $object, 0, $outputlangs);
+
 					}
 				}
 
@@ -537,6 +539,7 @@ class pdf_extended extends ModeleExpenseReport
 
 				// Page footer
 				$this->_pagefoot($pdf, $object, $outputlangs);
+				$this->_joinedFiles($pdf, $object, $outputlangs);
 				if (method_exists($pdf, 'AliasNbPages')) $pdf->AliasNbPages();
 
 				$pdf->Close();
@@ -572,7 +575,7 @@ class pdf_extended extends ModeleExpenseReport
 			$this->error = $langs->trans("ErrorConstantNotDefined", "EXPENSEREPORT_OUTPUTDIR");
 			return 0;
 		}
-		
+
 	}
 
 	/**
@@ -1116,7 +1119,7 @@ class pdf_extended extends ModeleExpenseReport
 
 	// phpcs:disable PEAR.NamingConventions.ValidFunctionName.PublicUnderscore
 	/**
-	 *  Show footer of page. Need this->emetteur object
+	 *  Show footer of page.
      *
 	 *  @param  PDF			$pdf     			PDF
 	 *  @param  Object		$object				Object to show
@@ -1128,38 +1131,93 @@ class pdf_extended extends ModeleExpenseReport
 	{
 		global $conf;
 		$showdetails = $conf->global->MAIN_GENERATE_DOCUMENTS_SHOW_FOOT_DETAILS;
+	}
+
+	/**
+	 *  Show joined files after expense report. Need this->emetteur object
+     *
+	 *  @param  PDF			$pdf     			PDF
+	 *  @param  Object		$object				Object to show
+	 *  @param  Translate	$outputlangs		Object lang for output
+	 *  @param  int			$hidefreetext		1=Hide free text
+	 *  @return int								Return height of bottom margin including footer text
+	 */
+
+	protected function _joinedFiles(&$pdf, $object, $outputlangs, $hidefreetext = 0)
+	{
+		global $conf;
+		$showdetails = $conf->global->MAIN_GENERATE_DOCUMENTS_SHOW_FOOT_DETAILS;
 		
 		require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
 		require_once DOL_DOCUMENT_ROOT.'/core/lib/images.lib.php';
-
-		$upload_dir = $conf->expensereport->dir_output."/".dol_sanitizeFileName($object->ref);
-		$arrayoffiles = dol_dir_list($upload_dir);
-	
-		foreach ($arrayoffiles as $file) :
 			
-			$proofFilename = $file['name'];
-			$pdfname = $file['level1name'] . '.pdf';
+		$DPI 		= 96;
+		$MM_IN_INCH = 25.4;
+		$A4_HEIGHT 	= 297;
+		$A4_WIDTH 	= 210;
+		$MAX_WIDTH 	= 800;
+		$MAX_HEIGHT = 500;
+
+		$upload_dir 	= $conf->expensereport->dir_output."/".dol_sanitizeFileName($object->ref);
+		$arrayoffiles 	= dol_dir_list($upload_dir);
+	
+		foreach ($arrayoffiles as $file) {
+			
+			$proofFilename 	= $file['name'];
+			$pdfname 		= $file['level1name'] . '.pdf';
+			$filename 		= $file['fullname'];
 
 			if (preg_match('/\.(jpg|png|jpeg)$/', $file['name'])) {
-				$pdf->addPage();
-				$pdf->Image($file['fullname'], $pdf->GetX(), $pdf->GetY(),100 );
-			} 
+			
+				list($width, $height, $type) = getimagesize($filename);
+
+				$ratio 			= $width/$height;
+				$portrait 		= $height > $width ? true : false;	
+				$widthScale 	= $MAX_WIDTH / $width;
+				$heightScale 	= $MAX_HEIGHT / $height;
+
+				$scale 			= min($widthScale, $heightScale);
 		
-			else if (preg_match('/\.(pdf)$/', $file['name']) && $pdfname !== $file['name'] ) {
-				$pagesNbr = $pdf->setSourceFile($file['fullname']);
+				$width 			= round($scale * $width * $MM_IN_INCH / $DPI);
+				$height 		= round($scale * $height * $MM_IN_INCH / $DPI);
+					
+				$pdf->AddPage($portrait ? 'P' : 'L');
+				$pagenb++;									
+				$pdf->SetXY($this->marge_gauche, $this->marge_haute);
+				
+				if (! $portrait) {
+					$pdf->Cell(100,0,$proofFilename,1,1,'C',$pdf->Image(
+						$filename, ($A4_HEIGHT - $width) / 2,
+						($A4_WIDTH - $height) / 2,
+						$width,
+						$height
+					));
+				} else {
+					$pdf->Cell(100,0,$proofFilename,1,1,'C',$pdf->Image(
+						$filename, ($A4_WIDTH - $width) / 2,
+						($A4_HEIGHT - $height) / 2,
+						$width,
+						$height
+					));
+				}
+				
+			} else if (preg_match('/\.(pdf)$/', $file['name']) && $pdfname !== $file['name'] ) {
+
+				$pagesNbr = $pdf->setSourceFile($filename);
+				
 				for ($p = 1; $p <= $pagesNbr; $p++)	{
 
-					$templateIdx = $pdf->ImportPage($p);
-					$size = $pdf->getTemplatesize($templateIdx);
-					$portrait = $size['h'] > $size['w'] ? true : false;
+					$templateIdx 	= $pdf->ImportPage($p);
+					$size 			= $pdf->getTemplatesize($templateIdx);
+					$portrait 		= $size['h'] > $size['w'] ? true : false;
 					
 					$pdf->AddPage($portrait ? 'P' : 'L');
 					$pagenb++; 
-					
-					$pdf->useTemplate($templateIdx);
+					$pdf->SetXY($this->marge_gauche-5, $this->marge_haute-5);
+					$pdf->Cell(100,0,$proofFilename,1,1,'C',$pdf->useTemplate($templateIdx));
 				}				
 			}
-		endforeach;	
+		}
 		
 		return pdf_pagefoot($pdf, $outputlangs, 'EXPENSEREPORT_FREE_TEXT', $this->emetteur, $this->marge_basse, $this->marge_gauche, $this->page_hauteur, $object, $showdetails, $hidefreetext);
 	}
