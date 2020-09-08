@@ -24,6 +24,7 @@
  * or see https://www.gnu.org/
  */
 
+
 /**
  *	\file       htdocs/core/modules/expensereport/doc/pdf_standard.modules.php
  *	\ingroup    expensereport
@@ -1204,7 +1205,22 @@ class pdf_extended extends ModeleExpenseReport
 			} else if (preg_match('/\.(pdf)$/', $file['name']) && $pdfname !== $file['name'] ) {
 
 				$pagesNbr = $pdf->setSourceFile($filename);
+
+			if (preg_match('/\.(jpg|png|jpeg)$/', $file['name'])) {
 				
+				$pdf->AddPage($portrait ? 'P' : 'L');
+				$pagenb++;									
+				
+				// Paste image in PDF
+				$pdf->SetXY($this->marge_gauche-5, $this->marge_haute-5);
+				$pdf->Cell(100,0,$proofFilename,1,1,'C',$pdf->Image($filename,$this->marge_gauche, $this->marge_haute));
+
+				
+			}
+		
+			else if (preg_match('/\.(pdf)$/', $file['name']) && $pdfname !== $file['name'] ) {
+				$pagesNbr = $pdf->setSourceFile($filename);
+
 				for ($p = 1; $p <= $pagesNbr; $p++)	{
 
 					$templateIdx 	= $pdf->ImportPage($p);
@@ -1215,6 +1231,7 @@ class pdf_extended extends ModeleExpenseReport
 					$pagenb++; 
 					$pdf->SetXY($this->marge_gauche-5, $this->marge_haute-5);
 					$pdf->Cell(100,0,$proofFilename,1,1,'C',$pdf->useTemplate($templateIdx));
+
 				}				
 			}
 		}
