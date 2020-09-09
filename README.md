@@ -8,5 +8,5 @@ This beautiful little file will allow you to obtain in a single pdf:
 - Your expense supporting files
 ## Setup
 Just upload the file in the repository 
-core/modules/expensereport
+core/modules/expensereport/doc
 On your Dolibarr installation
