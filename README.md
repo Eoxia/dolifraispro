@@ -8,14 +8,21 @@ This beautiful little file will allow you to obtain in a single pdf:
 - Your expense supporting files
 ## Setup
 
-1/
-Just upload the 'pdf_extended.modules.php' file in the repository core/modules/expensereport/doc
-On your Dolibarr installation
+Method 1 :
+On your Dolibarr installation :
+- Just upload the 'pdf_extended.modules.php' file in the repository core/modules/expensereport/doc
 
-2/
+Sur votre installation Dolibarr :
+- Il suffit de télécharger le fichier "pdf_extended.modules.php" dans le répertoire core/modules/expensereport/doc
+
+Method 2 :
 Download the archive file of the module (.zip) from this GitHub repo or on the DoliStore.com web site
--- Place the file in the root directory of dolibarr.
--- Decompress the zip file with the command : unzip dolifraispro_1.0.0.zip
+- Place the file in the root directory of dolibarr.
+- Decompress the zip file with the command : unzip dolifraispro_1.0.0.zip
+
+Téléchargez le fichier d'archive du module (.zip) à partir de ce repo GitHub ou sur le site web DoliStore.com
+- Placez le fichier dans le répertoire racine de dolibarr.
+- Décompressez le fichier zip avec la commande : unzip dolifraispro_1.0.0.zip
 
 
 
