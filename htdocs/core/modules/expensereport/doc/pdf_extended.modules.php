@@ -145,7 +145,7 @@ class pdf_extended extends ModeleExpenseReport
 		$this->marge_droite = isset($conf->global->MAIN_PDF_MARGIN_RIGHT) ? $conf->global->MAIN_PDF_MARGIN_RIGHT : 10;
 		$this->marge_haute = isset($conf->global->MAIN_PDF_MARGIN_TOP) ? $conf->global->MAIN_PDF_MARGIN_TOP : 10;
 		$this->marge_basse = isset($conf->global->MAIN_PDF_MARGIN_BOTTOM) ? $conf->global->MAIN_PDF_MARGIN_BOTTOM : 10;
-		
+
 		$this->option_logo = 1; // Affiche logo
 		$this->option_tva = 1; // Gere option tva FACTURE_TVAOPTION
 		$this->option_modereg = 1; // Affiche mode reglement
@@ -674,7 +674,7 @@ class pdf_extended extends ModeleExpenseReport
 	{
 		// global $conf, $langs, $hookmanager;
 		global $user, $langs, $conf, $mysoc, $db, $hookmanager;
-		$fileVersion = '-1.0.0';
+		$fileVersion = '-1.1.0';
 
 		// Load traductions files required by page
 		$outputlangs->loadLangs(array("main", "trips", "companies"));
@@ -1133,15 +1133,7 @@ class pdf_extended extends ModeleExpenseReport
 		global $conf;
 		$showdetails = $conf->global->MAIN_GENERATE_DOCUMENTS_SHOW_FOOT_DETAILS;
 	}
-/* trailer issue within certain cases
-	protected function _puttrailer( ) {
-	
-	out('/Size ' + (@n+1).to_s);
-	out('/Root ' + @n.to_s + ' 0 R');
-	out('/Info ' + (@n-1).to_s + ' 0 R');
 
-	}
-*/
 	/**
 	 *  Show joined files after expense report. Need this->emetteur object
      *
@@ -1169,7 +1161,7 @@ class pdf_extended extends ModeleExpenseReport
 
 		$upload_dir 	= $conf->expensereport->dir_output."/".dol_sanitizeFileName($object->ref);
 		$arrayoffiles 	= dol_dir_list($upload_dir);
-	
+
 		foreach ($arrayoffiles as $file) {
 			
 			$proofFilename 	= $file['name'];
@@ -1209,25 +1201,50 @@ class pdf_extended extends ModeleExpenseReport
 						$height
 					));
 				}
-				
+			
 			} else if (preg_match('/\.(pdf)$/', $file['name']) && $pdfname !== $file['name'] ) {
+			    //Rajouter condition pour que si le pdf n'a pas de trailer il y ait une image par défaut
+			   
+			    if (preg_match('/trailer[\s]*<<(.*)>>/isU', $this->pdfdata, $matches, PREG_OFFSET_CAPTURE, $offset) > 0) {
+			        $pagesNbr = $pdf->setSourceFile($filename);
+			        
+			        for ($p = 1; $p <= $pagesNbr; $p++)	{
 
-				$pagesNbr = $pdf->setSourceFile($filename);
-				
-				for ($p = 1; $p <= $pagesNbr; $p++)	{
+    					$templateIdx 	= $pdf->ImportPage($p);
+    					$size 			= $pdf->getTemplatesize($templateIdx);
+    					$portrait 		= $size['h'] > $size['w'] ? true : false;
+    					
+    					$pdf->AddPage($portrait ? 'P' : 'L');
+    					$pagenb++; 
+    					$pdf->SetXY($this->marge_gauche-5, $this->marge_haute-5);
+    					$pdf->Cell(100,0,$proofFilename,1,1,'C',$pdf->useTemplate($templateIdx)); 
+			        }
+			     } else {
+			         
+			    $filename = $conf->expensereport->dir_output."/".'invalidPDF.jpg';
+			    list($width, $height, $type) = getimagesize($filename);
 
-					$templateIdx 	= $pdf->ImportPage($p);
-					$size 			= $pdf->getTemplatesize($templateIdx);
-					$portrait 		= $size['h'] > $size['w'] ? true : false;
-					
-					$pdf->AddPage($portrait ? 'P' : 'L');
-					$pagenb++; 
-					$pdf->SetXY($this->marge_gauche-5, $this->marge_haute-5);
-					$pdf->Cell(100,0,$proofFilename,1,1,'C',$pdf->useTemplate($templateIdx));
-				}				
-			}
-		}
+			 	$ratio 			= $width/$height;
+				$portrait 		= $height > $width ? true : false;	
+				$widthScale 	= $MAX_WIDTH / $width;
+				$heightScale 	= $MAX_HEIGHT / $height;
+
+				$scale 			= min($widthScale, $heightScale);
 		
+				$width 			= round($scale * $width * $MM_IN_INCH / $DPI);
+				$height 		= round($scale * $height * $MM_IN_INCH / $DPI);
+					
+			        $pdf->AddPage($portrait ? 'P' : 'L');
+			    	$pagenb++;									
+			    	$pdf->SetXY($this->marge_gauche, $this->marge_haute);
+					$pdf->Cell(100,5,$proofFilename . ' : Erreur d\'importation',1,1,'C',$pdf->Image($filename, ($A4_HEIGHT - $width) / 2,
+						($A4_WIDTH - $height) / 2,
+						$width,
+						$height
+					));
+			    }
+			}			
+		}
 		return pdf_pagefoot($pdf, $outputlangs, 'EXPENSEREPORT_FREE_TEXT', $this->emetteur, $this->marge_basse, $this->marge_gauche, $this->page_hauteur, $object, $showdetails, $hidefreetext);
 	}
 }
