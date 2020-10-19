@@ -10,10 +10,10 @@ This beautiful little file will allow you to obtain in a single pdf:
 
 Method 1 :
 On your Dolibarr installation :
-- Just upload the 'pdf_extended.modules.php' file in the repository core/modules/expensereport/doc
+- Just upload the 'pdf_extended.modules.php' file in the 'repository core/modules/expensereport/doc' and the 'invalidPDF.jpg' file in the repository 'documents/expensereport'
 
 Sur votre installation Dolibarr :
-- Il suffit de télécharger le fichier "pdf_extended.modules.php" dans le répertoire core/modules/expensereport/doc
+- Ajoutez le fichier "pdf_extended.modules.php" dans le répertoire 'core/modules/expensereport/doc' ainsi que le fichier "invalidPDF.jpg"dans le répertoire 'documents/expensereport'
 
 Method 2 :
 Download the archive file of the module (.zip) from this GitHub repo or on the DoliStore.com web site
