@@ -676,7 +676,7 @@ class pdf_extended extends ModeleExpenseReport
 	{
 		// global $conf, $langs, $hookmanager;
 		global $user, $langs, $conf, $mysoc, $db, $hookmanager;
-		$fileVersion = '-1.1.0';
+		$fileVersion = '-1.2.0';
 
 		// Load traductions files required by page
 		$outputlangs->loadLangs(array("main", "trips", "companies"));
@@ -1239,8 +1239,8 @@ class pdf_extended extends ModeleExpenseReport
                     $pdf->AddPage($portrait ? 'P' : 'L');
                     $pagenb++;									
                     $pdf->SetXY($this->marge_gauche, $this->marge_haute);
-                    $pdf->Cell(100,5,$proofFilename . ' : Erreur d\'importation',1,1,'C',$pdf->Image($filename, ($A4_HEIGHT - $width) / 2,
-                        ($A4_WIDTH - $height) / 2,
+                    $pdf->Cell(100,5,$proofFilename . ' : Erreur d\'importation',1,1,'C',$pdf->Image($filename, ($A4_WIDTH - $width) / 2,
+                        ($A4_HEIGHT - $height) / 2,
                         $width,
                         $height
                         ));
