@@ -3,7 +3,7 @@
  * Copyright (C) 2004-2012	Laurent Destailleur			<eldy@users.sourceforge.net>
  * Copyright (C) 2005-2012	Regis Houssin				<regis.houssin@capnetworks.com>
  * Copyright (C) 2016		Philippe SAGOT (Philazerty)	<courrier@mon-dolibarr.fr>
- 
+
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -50,7 +50,7 @@ class modDolifraispro extends DolibarrModules
 		// Use here a free id (See in Home -> System information -> Dolibarr for list of used modules id).
 		$this->numero = 424001;
 		$this->editor_name = "Extended model by Eoxia";
-	    $this->editor_web = "https://www.eoxia.fr";
+	    $this->editor_web = "https://www.eoxia.com";
 		
 		// Key text used to identify module (for permissions, menus, etc...)
 		$this->rights_class = 'Dolifraispro';
@@ -154,4 +154,3 @@ class modDolifraispro extends DolibarrModules
 	}
 
 }
-
