@@ -81,7 +81,8 @@ class modDolifraispro extends DolibarrModules
 		$this->dirs = array();
 
 		// Config pages. Put here list of php page, stored into mymodule/admin directory, to use to setup module.
-		$this->config_page_url = array("setup.php@dolifraispro");
+		// No admin/ directory yet: declaring setup.php made the "Configure" link of the modules list a 404.
+		$this->config_page_url = array();
 
 		// Dependencies
 		$this->hidden = false;			// A condition to hide module
